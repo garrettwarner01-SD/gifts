@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Christmas Gift Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Young+Serif&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: cheerful and festive, still quick to use one-handed in a store aisle
+   IDEA: a wrapped present — bright red paper, candy-cane trim, snow falling, a ribbon that fills as money is spent
+   PICTURE: the budget ribbon at the top: spent vs. remaining, large, always visible
+   COLOUR and TYPE: Christmas red #c8102e header, warm snow #fdf8f1 ground, holly green #1e7a3c, gold; Mountains of Christmas title, Young Serif + DM Sans
+   LAYOUT: sticky summary band, tabbed lists of cards, bottom sheet editors, big receipt button */
+:root{color-scheme:light;--bg:#fdf8f1;--card:#fff;--ink:#2a1a14;--mute:#7a6158;--line:#efe1d4;--pine:#1e7a3c;--pine2:#c8102e;--red:#c8102e;--gold:#e8b030;--ok:#1e7a3c}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:"Young Serif",Georgia,serif;font-weight:400;line-height:1.1;margin:0}
+.top{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 85% 0%,#e8283f 0,#c8102e 45%,#a50d26 100%);color:#fff;padding:20px max(4vw,16px) 22px}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(-45deg,#fff 0 10px,#c8102e 10px 20px,#fff 20px 30px,#1e7a3c 30px 40px)}
+.top .wrap{position:relative;z-index:1}
+.top h1{font-family:"Mountains of Christmas","Young Serif",serif;font-weight:700;font-size:clamp(30px,8.5vw,50px);white-space:nowrap;display:flex;align-items:center;gap:8px;text-shadow:0 2px 0 #7a0a1c55}
+.holly{width:42px;height:34px;flex:none}
+.snow{position:absolute;inset:0;pointer-events:none;z-index:0}
+.snow i{position:absolute;top:-12px;color:#fff;opacity:.75;font-style:normal;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(420px) rotate(180deg)}}
+@media(prefers-reduced-motion:reduce){.snow i{animation:none;top:auto}}
+.wrap{max-width:900px;margin:0 auto}
+
+.top .sub{color:#ffe3e7;font-size:14px;margin-top:2px}
+.ribbon{margin-top:16px;background:#ffffff33;box-shadow:inset 0 0 0 2px #ffffff55;border-radius:12px;height:22px;overflow:hidden;display:flex}
+.ribbon i{display:block;height:100%}
+.r-gift{background:var(--gold)}.r-oth{background:#ffe08a}.r-over{background:repeating-linear-gradient(45deg,#ffcc4d 0 6px,#b3122e 6px 12px)}
+.big{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;margin-top:12px}
+.big b{font-family:"Young Serif",serif;font-weight:400;font-size:clamp(34px,9vw,52px);line-height:1}
+.big span{color:#ffe3e7}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:14px}
+.stat{background:#ffffff26;border:1px solid #ffffff33;border-radius:12px;padding:8px 10px;font-size:13px;color:#ffe3e7}
+.stat b{display:block;color:#fff;font-size:18px;font-weight:700;white-space:nowrap}
+.stat button{all:unset;cursor:pointer;color:#fff;font-weight:700;font-size:18px;border-bottom:1px dashed #ffffff80}
+.tabs{position:sticky;top:0;z-index:5;background:#fdf8f1f0;backdrop-filter:blur(6px);border-bottom:1px solid var(--line);display:flex;gap:4px;padding:6px max(4vw,12px);overflow-x:auto}
+.tabs button{flex:none;border:0;background:none;color:var(--mute);font:600 15px "DM Sans";padding:10px 14px;border-radius:999px;min-height:44px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--pine);color:#fff}
+main{padding:14px max(4vw,12px)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar input,.bar select{flex:1 1 140px}
+input,select,textarea{font:16px "DM Sans";color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.btn{border:0;border-radius:12px;padding:11px 16px;min-height:44px;font:700 15px "DM Sans";cursor:pointer;background:var(--pine);color:#fff}
+.btn.red{background:var(--red)}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.btn:disabled{opacity:.5}
+.list{display:grid;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--pine);border-radius:14px;box-shadow:0 2px 8px #c8102e0d;padding:12px 14px;cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card h3{font-size:19px}
+.meta{color:var(--mute);font-size:14px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--line);color:var(--ink);white-space:nowrap}
+.c-over{background:var(--red);color:#fff}.c-shop{background:var(--gold);color:#3a2600}.c-set{background:var(--ok);color:#fff}
+.mini{height:6px;background:var(--line);border-radius:4px;margin-top:8px;overflow:hidden}.mini i{display:block;height:100%;background:repeating-linear-gradient(-45deg,#c8102e 0 6px,#e8283f 6px 12px)}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px;font-size:13px;color:var(--mute)}
+.grid3 b{display:block;color:var(--ink);font-size:15px}
+.cat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.empty{color:var(--mute);text-align:center;padding:28px 10px}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:9;display:flex;gap:8px}
+.fab .btn{box-shadow:0 6px 18px #0005;border-radius:999px;padding:14px 20px}
+.sheet{position:fixed;inset:0;z-index:20;display:none;background:#0008}
+.sheet.open{display:flex;align-items:flex-end;justify-content:center}
+.panel{background:var(--bg);border-top:6px solid var(--red);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.panel h2{font-size:24px;margin-bottom:12px}
+.f{display:grid;gap:10px}
+.f label{display:grid;gap:4px;font-size:14px;font-weight:600;color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.acts .sp{flex:1}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick label{display:grid;place-items:center;gap:6px;text-align:center;border:2px dashed var(--line);border-radius:14px;padding:18px 8px;cursor:pointer;color:var(--ink);font-weight:700}
+.pick input{display:none}
+.pick svg{width:34px;height:34px;stroke:var(--red);fill:none;stroke-width:1.8}
+.thumb{max-height:200px;max-width:100%;border-radius:10px;display:block;margin:6px auto;border:1px solid var(--line)}
+.li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:8px}
+.li .two{grid-template-columns:2fr 1fr}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{flex:1;border:0;background:var(--card);color:var(--ink);font:600 14px "DM Sans";min-height:44px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--pine);color:#fff}
+.note{font-size:13px;color:var(--mute)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;display:none;font-weight:600;max-width:90vw}
+.sync{font-size:12px;color:#ffe3e7}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+@media(max-width:420px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="snow" id="snow" aria-hidden="true"></div>
+  <div class="row" style="flex-wrap:wrap"><h1><svg class="holly" viewBox="0 0 42 34" aria-hidden="true"><path d="M20 20C14 8 6 6 1 9c4 1 4 4 2 6 4-1 6 2 4 5 4-2 8 0 13 0z" fill="#1e7a3c" stroke="#0f4f24" stroke-width="1.2"/><path d="M22 20c6-12 14-14 19-11-4 1-4 4-2 6-4-1-6 2-4 5-4-2-8 0-13 0z" fill="#2a9a4c" stroke="#0f4f24" stroke-width="1.2"/><circle cx="17" cy="23" r="4.2" fill="#ff3b4f" stroke="#7a0a1c"/><circle cx="25" cy="23" r="4.2" fill="#ff3b4f" stroke="#7a0a1c"/><circle cx="21" cy="28.5" r="4.2" fill="#ff3b4f" stroke="#7a0a1c"/><circle cx="16" cy="21.8" r="1.2" fill="#fff" opacity=".8"/><circle cx="24" cy="21.8" r="1.2" fill="#fff" opacity=".8"/></svg>Christmas 2026</h1><span class="sync" id="sync">Loading…</span></div>
+  <div class="sub">Gift budget &amp; tracker 🎁</div>
+  <div class="big"><b id="remain">$0</b><span id="remainLbl">left of your budget</span></div>
+  <div class="ribbon" id="ribbon" aria-hidden="true"></div>
+  <div class="stats" id="stats"></div>
+</div></header>
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-t="people" aria-selected="true">People</button>
+  <button role="tab" data-t="gifts">Gifts</button>
+  <button role="tab" data-t="other">Other expenses</button>
+  <button role="tab" data-t="receipts">Receipts</button>
+</nav>
+<main class="wrap" id="main"></main>
+<div class="fab"><button class="btn ghost" id="addBtn" style="background:var(--card)">+ Add</button><button class="btn red" id="rcptBtn">Receipt</button></div>
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const STAT=["Idea","Ordered","Purchased","Shipped","Arrived","Wrapped","Given"];
+const CATS=["Wrapping & Cards","Shipping & Postage","Decorations","Tree","Food & Entertaining","Travel","Other"];
+const RELS=["Family","Friends","Work","Pets","Other"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>(n<0?"-":"")+"$"+Math.abs(+n||0).toLocaleString("en-US",{minimumFractionDigits:Math.abs(n)%1?2:0,maximumFractionDigits:2});
+const num=v=>{const n=parseFloat(String(v??"").replace(/[$,]/g,""));return isNaN(n)?0:n};
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().slice(0,10);
+
+let S={docs:{}},tab="people",db=null,coll=null,assets=null,sample=true,canImg=false,filt={q:"",who:"",st:""};
+const all=k=>Object.values(S.docs).filter(d=>d.kind===k);
+const people=()=>all("person").sort((a,b)=>(a.order??99)-(b.order??99)||a.name.localeCompare(b.name));
+const settings=()=>S.docs.settings||{kind:"settings",budget:0};
+
+/* ---------- storage: db when available, else this browser ---------- */
+const LS="gifttracker2026";
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(S.docs))}catch(e){}}
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS)||"null")}catch(e){return null}}
+const queue={};
+async function put(id,data){S.docs[id]={...data,id};render();
+  if(!coll){lsSave();return}
+  const run=async()=>{try{const {id:_,...body}=S.docs[id]||{};if(S.docs[id])await coll.doc(id).set(body)}catch(e){toast(e.code==="quota_exceeded"?"Storage is full":"Couldn't save – check connection")}};
+  queue[id]=(queue[id]||Promise.resolve()).then(run)}
+async function del(id){delete S.docs[id];render();
+  if(!coll){lsSave();return}
+  queue[id]=(queue[id]||Promise.resolve()).then(()=>coll.doc(id).delete().catch(()=>toast("Couldn't delete")))}
+
+/* ---------- receipt pictures live in this phone's IndexedDB ---------- */
+const idb=()=>new Promise((res,rej)=>{try{const r=indexedDB.open("gifttracker-img",1);r.onupgradeneeded=()=>r.result.createObjectStore("img");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}});
+async function imgPut(id,blob){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("img","readwrite");t.objectStore("img").put(blob,id);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+async function imgGet(id){const d=await idb();return new Promise(res=>{const q=d.transaction("img").objectStore("img").get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}
+async function imgDel(id){try{const d=await idb();d.transaction("img","readwrite").objectStore("img").delete(id)}catch(e){}}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* ---------- maths (mirrors the spreadsheet) ---------- */
+function personTotals(p){const g=all("gift").filter(x=>x.pid===p.id);
+  const est=g.reduce((a,x)=>a+num(x.est),0),act=g.reduce((a,x)=>a+num(x.actual),0);
+  const used=Math.max(est,act),rem=num(p.budget)-used;
+  const st=!g.length?"No gifts yet":used>num(p.budget)?"Over budget":g.some(x=>x.status==="Idea"||!x.status&&!num(x.actual))?"Still shopping":"All set";
+  return {n:g.length,est,act,rem,st,used}}
+function totals(){const P=people(),G=all("gift"),X=all("expense");
+  const budget=num(settings().budget),alloc=P.reduce((a,p)=>a+num(p.budget),0);
+  const planned=G.reduce((a,x)=>a+num(x.est),0),gs=G.reduce((a,x)=>a+num(x.actual),0),os=X.reduce((a,x)=>a+num(x.amount),0);
+  const spent=gs+os;return {budget,alloc,planned,gs,os,spent,rem:budget-spent,pct:budget?spent/budget:0}}
+
+/* ---------- render ---------- */
+function render(){const T=totals();
+  $("#remain").textContent=money(T.rem);$("#remainLbl").textContent=!T.budget?"tap Total budget below to set it":T.rem<0?"over your budget":`left of ${money(T.budget)} (${Math.round(T.pct*100)}% used)`;
+  const b=Math.max(T.budget,T.spent)||1;
+  $("#ribbon").innerHTML=`<i class="r-gift" style="width:${Math.min(T.gs,T.budget)/b*100}%"></i><i class="r-oth" style="width:${Math.max(0,Math.min(T.os,T.budget-T.gs))/b*100}%"></i>${T.spent>T.budget?`<i class="r-over" style="width:${(T.spent-T.budget)/b*100}%"></i>`:""}`;
+  $("#stats").innerHTML=[["Total budget",`<button id="editBudget">${money(T.budget)}</button>`],["Allocated to people",money(T.alloc)],["Gifts planned (est.)",money(T.planned)],["Gifts spent",money(T.gs)],["Other expenses",money(T.os)],["Total spent",money(T.spent)]]
+    .map(([l,v])=>`<div class="stat">${l}<b>${v}</b></div>`).join("");
+  $("#editBudget").onclick=editBudget;
+  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x.dataset.t===tab));
+  $("#main").innerHTML=({people:vPeople,gifts:vGifts,other:vOther,receipts:vReceipts})[tab]();
+  $("#addBtn").textContent=({people:"+ Person",gifts:"+ Gift",other:"+ Expense",receipts:"+ Gift"})[tab];
+  bindMain()}
+function chipCls(st){return st==="Over budget"?"c-over":st==="Still shopping"?"c-shop":st==="All set"?"c-set":""}
+function vPeople(){const P=people();const T=totals();
+  const warn=T.alloc>T.budget?`<p class="note" style="color:var(--red);font-weight:600">Heads up: you've allocated ${money(T.alloc)} to people, which is ${money(T.alloc-T.budget)} more than your ${money(T.budget)} total budget.</p>`:"";
+  if(!P.length)return `<div class="empty"><h3 style="font-size:22px;color:var(--ink);margin-bottom:6px">Welcome!</h3>1. Tap your total budget at the top to set it.<br>2. Tap <b>+ Person</b> to add everyone you're shopping for.<br>3. Add gifts, or tap <b>Receipt</b> after you shop.<p class="note">Tip: add this page to your Home Screen so it opens like an app and your list stays put.</p></div>`;
+  return warn+`<div class="list">${P.map(p=>{const t=personTotals(p);return `<button class="card" data-edit="${p.id}">
+   <div class="row"><h3>${esc(p.name)}</h3><span class="chip ${chipCls(t.st)}">${t.st}</span></div>
+   <div class="meta">${esc(p.rel||"")} · ${t.n} gift${t.n===1?"":"s"} · budget ${money(p.budget)}</div>
+   <div class="mini"><i style="width:${Math.min(100,num(p.budget)?t.used/num(p.budget)*100:0)}%"></i></div>
+   <div class="grid3"><div>Planned<b class="num">${money(t.est)}</b></div><div>Spent<b class="num">${money(t.act)}</b></div><div>Remaining<b class="num" style="color:${t.rem<0?"var(--red)":"inherit"}">${money(t.rem)}</b></div></div></button>`}).join("")}</div>`}
+function vGifts(){const P=people(),pn=Object.fromEntries(P.map(p=>[p.id,p.name]));
+  let G=all("gift").sort((a,b)=>(pn[a.pid]||"").localeCompare(pn[b.pid]||"")||(a.gift||"").localeCompare(b.gift||""));
+  const q=filt.q.toLowerCase();
+  G=G.filter(g=>(!filt.who||g.pid===filt.who)&&(!filt.st||g.status===filt.st)&&(!q||[g.gift,g.store,g.notes,pn[g.pid],g.tracking].join(" ").toLowerCase().includes(q)));
+  const est=G.reduce((a,x)=>a+num(x.est),0),act=G.reduce((a,x)=>a+num(x.actual),0);
+  return `<div class="bar"><input id="fq" type="search" placeholder="Search gifts" value="${esc(filt.q)}">
+   <select id="fw"><option value="">Everyone</option>${P.map(p=>`<option value="${p.id}" ${filt.who===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
+   <select id="fs"><option value="">Any status</option>${STAT.map(s=>`<option ${filt.st===s?"selected":""}>${s}</option>`).join("")}</select></div>
+   <div class="row meta" style="margin-bottom:8px"><span>${G.length} gift${G.length===1?"":"s"}</span><span class="num">Est. ${money(est)} · Spent ${money(act)}</span></div>
+   ${G.length?`<div class="list">${G.map(g=>`<button class="card" data-edit="${g.id}">
+   <div class="row"><h3>${esc(g.gift||"(untitled gift)")}</h3><b class="num">${money(num(g.actual)||num(g.est))}</b></div>
+   <div class="meta">${esc(pn[g.pid]||"No recipient")}${g.store?" · "+esc(g.store):""}${g.receiptId?" · 🧾":""}</div>
+   <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${g.status?`<span class="chip">${esc(g.status)}</span>`:""}${g.wrapped==="Yes"?`<span class="chip c-set">Wrapped</span>`:""}${g.arrival?`<span class="chip">Arrives ${esc(g.arrival)}</span>`:""}</div></button>`).join("")}</div>`:`<div class="empty">No gifts match.</div>`}
+   <div class="acts"><button class="btn ghost sm" id="csv">Copy gifts as CSV</button></div>`}
+function vOther(){const X=all("expense").sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const byCat=CATS.map(c=>[c,X.filter(x=>x.cat===c).reduce((a,x)=>a+num(x.amount),0)]);
+  return `<div class="card" style="cursor:default;margin-bottom:12px"><h3 style="margin-bottom:6px">By category</h3>${byCat.map(([c,v])=>`<div class="cat"><span>${c}</span><b class="num">${money(v)}</b></div>`).join("")}
+   <div class="cat" style="border:0"><b>Total</b><b class="num">${money(X.reduce((a,x)=>a+num(x.amount),0))}</b></div></div>
+   ${X.length?`<div class="list">${X.map(x=>`<button class="card" data-edit="${x.id}"><div class="row"><h3>${esc(x.item||x.cat)}</h3><b class="num">${money(x.amount)}</b></div>
+   <div class="meta">${esc(x.cat)}${x.date?" · "+esc(x.date):""}${x.receiptId?" · 🧾":""}${x.notes?" · "+esc(x.notes):""}</div></button>`).join("")}</div>`:`<div class="empty">No other expenses yet.</div>`}`}
+const backupUI=`<div class="card" style="cursor:default;margin-top:16px"><h3>Back up</h3><p class="note">Everything is saved on this phone only. Save a backup now and then (it goes to your Downloads / Files), and use Restore to bring it back on a new phone. Pictures of receipts aren't in the backup.</p>
+  <div class="acts"><button class="btn sm" id="bkup">Save backup</button><label class="btn ghost sm" style="display:inline-flex;align-items:center">Restore<input type="file" id="rest" accept=".json,application/json" hidden></label></div></div>`;
+function vReceipts(){const R=all("receipt").sort((a,b)=>(b.created||"").localeCompare(a.created||""));
+  if(!R.length)return `<div class="empty">No receipts yet. Tap <b>Receipt</b> to snap a photo or upload a screenshot.</div>`+backupUI;
+  return backupUI.replace('margin-top:16px','margin-bottom:12px')+`<div class="list">${R.map(r=>{const n=all("gift").filter(g=>g.receiptId===r.id).length+all("expense").filter(x=>x.receiptId===r.id).length;
+   return `<button class="card" data-edit="${r.id}"><div class="row"><h3>${esc(r.store||"Receipt")}</h3><b class="num">${money(r.total)}</b></div>
+   <div class="meta">${esc(r.date||"")} · ${n} item${n===1?"":"s"} recorded</div></button>`}).join("")}</div>`}
+
+function bindMain(){document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const d=S.docs[b.dataset.edit];
+  ({person:editPerson,gift:editGift,expense:editExpense,receipt:viewReceipt})[d.kind](d)});
+  const fq=$("#fq");if(fq){fq.oninput=()=>{filt.q=fq.value;const p=fq.selectionStart;render();const n=$("#fq");n.focus();n.setSelectionRange(p,p)};
+   $("#fw").onchange=e=>{filt.who=e.target.value;render()};$("#fs").onchange=e=>{filt.st=e.target.value;render()};
+   $("#csv").onclick=copyCsv}
+  if($("#bkup")){$("#bkup").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({app:"gifttracker",v:1,saved:new Date().toISOString(),docs:S.docs},null,1)],{type:"application/json"}));a.download=`Gift_Tracker_Backup_${today()}.json`;document.body.appendChild(a);a.click();a.remove()};
+   $("#rest").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(j.app!=="gifttracker"||!j.docs)throw 0;S.docs=j.docs;lsSave();render();toast("Backup restored")}catch(err){toast("That isn't a gift tracker backup")}}}}
+
+/* ---------- sheets ---------- */
+function open(html,bind){$("#panel").innerHTML=html;$("#sheet").classList.add("open");$("#panel").scrollTop=0;bind&&bind()}
+function close(){$("#sheet").classList.remove("open")}
+$("#sheet").onclick=e=>{if(e.target.id==="sheet")close()};
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display="none",2600)}
+const opts=(arr,sel,blank)=>(blank!=null?`<option value="">${blank}</option>`:"")+arr.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`}).join("");
+const pOpts=sel=>opts(people().map(p=>[p.id,p.name]),sel,"Choose…");
+const val=id=>$("#"+id).value.trim();
+const confirmDel=(btn,fn)=>{btn.onclick=()=>{if(btn.dataset.sure){fn();close()}else{btn.dataset.sure=1;btn.textContent="Tap again to delete"}}};
+
+function editBudget(){open(`<h2>Total holiday budget</h2><div class="f"><label>Budget ($)<input id="b" type="number" inputmode="decimal" value="${num(settings().budget)}"></label></div>
+ <div class="acts"><span class="sp"></span><button class="btn ghost" id="x">Cancel</button><button class="btn" id="ok">Save</button></div>`,()=>{
+ $("#x").onclick=close;$("#ok").onclick=()=>{put("settings",{...settings(),kind:"settings",budget:num(val("b"))});close()}})}
+
+function editPerson(p){p=p||{id:uid("p_"),kind:"person",name:"",rel:"Family",budget:50,order:people().length};const isNew=!S.docs[p.id];
+ open(`<h2>${isNew?"Add person":"Edit "+esc(p.name)}</h2><div class="f">
+ <label>Name<input id="n" value="${esc(p.name)}" autocomplete="off"></label>
+ <div class="two"><label>Relationship<select id="r">${opts(RELS,p.rel)}</select></label><label>Budget ($)<input id="b" type="number" inputmode="decimal" value="${num(p.budget)}"></label></div></div>
+ <div class="acts">${isNew?"":`<button class="btn ghost" id="d" style="color:var(--red)">Delete</button>`}<span class="sp"></span><button class="btn ghost" id="x">Cancel</button><button class="btn" id="ok">Save</button></div>`,()=>{
+ $("#x").onclick=close;if(!isNew)confirmDel($("#d"),()=>{all("gift").filter(g=>g.pid===p.id).forEach(g=>put(g.id,{...g,pid:""}));del(p.id)});
+ $("#ok").onclick=()=>{const n=val("n");if(!n){toast("Add a name");return}put(p.id,{...p,name:n,rel:val("r"),budget:num(val("b"))});close()}})}
+
+function giftForm(g){return `<label>Recipient<select id="pid">${pOpts(g.pid)}</select></label>
+ <label>Gift<input id="gift" value="${esc(g.gift)}"></label>
+ <label>Store / link<input id="store" value="${esc(g.store)}"></label>
+ <div class="two"><label>Est. cost<input id="est" type="number" inputmode="decimal" step="0.01" value="${g.est??""}"></label><label>Actual cost<input id="actual" type="number" inputmode="decimal" step="0.01" value="${g.actual??""}"></label></div>
+ <div class="two"><label>Status<select id="status">${opts(STAT,g.status,"—")}</select></label><label>Wrapped?<select id="wrapped">${opts(["No","Yes"],g.wrapped||"No")}</select></label></div>
+ <div class="two"><label>Order date<input id="orderDate" type="date" value="${esc(g.orderDate)}"></label><label>Expected arrival<input id="arrival" type="date" value="${esc(g.arrival)}"></label></div>
+ <label>Tracking #<input id="tracking" value="${esc(g.tracking)}"></label>
+ <label>Notes<textarea id="notes">${esc(g.notes)}</textarea></label>`}
+function editGift(g){g=g||{id:uid("g_"),kind:"gift",pid:filt.who||"",status:"Idea",wrapped:"No"};const isNew=!S.docs[g.id];
+ open(`<h2>${isNew?"Add gift":"Edit gift"}</h2><div class="f">${giftForm(g)}</div>
+ ${g.receiptId&&S.docs[g.receiptId]?`<p class="note"><button class="btn ghost sm" id="vr">View receipt</button></p>`:""}
+ <div class="acts">${isNew?"":`<button class="btn ghost" id="d" style="color:var(--red)">Delete</button>`}<span class="sp"></span><button class="btn ghost" id="x">Cancel</button><button class="btn" id="ok">Save</button></div>`,()=>{
+ $("#x").onclick=close;if(!isNew)confirmDel($("#d"),()=>del(g.id));if($("#vr"))$("#vr").onclick=()=>viewReceipt(S.docs[g.receiptId]);
+ $("#ok").onclick=()=>{const o={...g};["pid","gift","store","status","wrapped","orderDate","arrival","tracking","notes"].forEach(k=>o[k]=val(k));
+  ["est","actual"].forEach(k=>o[k]=val(k)===""?"":num(val(k)));put(g.id,o);close()}})}
+function editExpense(x){x=x||{id:uid("x_"),kind:"expense",cat:"Wrapping & Cards",date:today()};const isNew=!S.docs[x.id];
+ open(`<h2>${isNew?"Add expense":"Edit expense"}</h2><div class="f">
+ <label>Category<select id="cat">${opts(CATS,x.cat)}</select></label><label>Item<input id="item" value="${esc(x.item)}"></label>
+ <div class="two"><label>Date<input id="date" type="date" value="${esc(x.date)}"></label><label>Amount ($)<input id="amount" type="number" inputmode="decimal" step="0.01" value="${x.amount??""}"></label></div>
+ <label>Notes<textarea id="notes">${esc(x.notes)}</textarea></label></div>
+ ${x.receiptId&&S.docs[x.receiptId]?`<p><button class="btn ghost sm" id="vr">View receipt</button></p>`:""}
+ <div class="acts">${isNew?"":`<button class="btn ghost" id="d" style="color:var(--red)">Delete</button>`}<span class="sp"></span><button class="btn ghost" id="x">Cancel</button><button class="btn" id="ok">Save</button></div>`,()=>{
+ $("#x").onclick=close;if(!isNew)confirmDel($("#d"),()=>del(x.id));if($("#vr"))$("#vr").onclick=()=>viewReceipt(S.docs[x.receiptId]);
+ $("#ok").onclick=()=>{put(x.id,{...x,cat:val("cat"),item:val("item"),date:val("date"),amount:num(val("amount")),notes:val("notes")});close()}})}
+function viewReceipt(r){const items=[...all("gift").filter(g=>g.receiptId===r.id).map(g=>[g.gift,(S.docs[g.pid]||{}).name||"No recipient",g.actual]),...all("expense").filter(x=>x.receiptId===r.id).map(x=>[x.item,x.cat,x.amount])];
+ open(`<h2>${esc(r.store||"Receipt")}</h2><p class="meta">${esc(r.date||"")} · total ${money(r.total)}</p>
+ ${r.assetId?`<img class="thumb" style="max-height:60vh" id="rimg" alt="Receipt photo">`:`<p class="note">No image saved with this receipt.</p>`}
+ ${r.note?`<p class="note">Your notes: ${esc(r.note)}</p>`:""}
+ ${items.map(i=>`<div class="cat"><span>${esc(i[0])} <span class="meta">· ${esc(i[1])}</span></span><b class="num">${money(i[2])}</b></div>`).join("")}
+ <div class="acts"><button class="btn ghost" id="d" style="color:var(--red)">Delete receipt</button><span class="sp"></span><button class="btn" id="x">Done</button></div>
+ <p class="note">Deleting the receipt keeps the gifts and expenses it created.</p>`,()=>{$("#x").onclick=close;
+ if(r.assetId)imgGet(r.assetId).then(b=>{const i=$("#rimg");if(i&&b)i.src=URL.createObjectURL(b);else if(i)i.outerHTML=`<p class="note">The picture isn't on this phone.</p>`});
+ confirmDel($("#d"),()=>{[...all("gift"),...all("expense")].filter(d=>d.receiptId===r.id).forEach(d=>put(d.id,{...d,receiptId:""}));if(r.assetId)imgDel(r.assetId);del(r.id)})})}
+
+/* ---------- receipt flow ---------- */
+let R=null;
+function startReceipt(){R={img:null,blob:null,mode:"gift",pid:"",cat:"Wrapping & Cards",status:"Purchased",note:"",store:"",date:today(),total:"",tax:"",spread:true,items:[]};stepPick()}
+const camSvg=`<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`,imgSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>`;
+function stepPick(){open(`<h2>Add a receipt</h2><div class="pick">
+ <label>${camSvg}Take a photo<input type="file" accept="image/*" capture="environment" id="f1"></label>
+ <label>${imgSvg}Upload screenshot or photo<input type="file" accept="image/*" id="f2"></label></div>
+ <p class="note">You can also skip the picture and type it in.</p>
+ <div class="acts"><button class="btn ghost" id="skip">Enter manually</button><span class="sp"></span><button class="btn ghost" id="x">Cancel</button></div>`,()=>{
+ $("#x").onclick=close;$("#skip").onclick=()=>{R.items=[blankItem()];stepDetails()};
+ const h=async e=>{const f=e.target.files[0];if(!f)return;try{const b=await shrink(f,1600);R.blob=b;R.img=URL.createObjectURL(b);stepDetails()}catch(err){toast("Couldn't read that image")}};
+ $("#f1").onchange=h;$("#f2").onchange=h})}
+function shrink(file,max){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement("canvas");c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);
+ c.getContext("2d").drawImage(i,0,0,c.width,c.height);c.toBlob(b=>b?res(b):rej(),"image/jpeg",.82)};i.onerror=rej;i.src=URL.createObjectURL(file)})}
+const blankItem=()=>({desc:"",amount:"",to:R.mode==="gift"?(R.pid?"p:"+R.pid:""):"c:"+R.cat});
+function stepDetails(){const seg=(v,l)=>`<button data-m="${v}" aria-pressed="${R.mode===v}">${l}</button>`;
+ open(`<h2>What's this receipt for?</h2>${R.img?`<img class="thumb" src="${R.img}" alt="Receipt preview">`:""}
+ <div class="f"><div class="seg" id="seg">${seg("gift","Gifts")}${seg("other","Other expense")}${seg("mixed","A mix")}</div>
+ <div id="dflt"></div>
+ <label>Details (helps sort the items)<textarea id="note" placeholder="e.g. The sweater is for Sarah, the cat toys are for Marco and Isabelle, tape and bows are wrapping">${esc(R.note)}</textarea></label>
+ ${R.img&&sample?`<p class="note">The app will read the store, date, total and line items from the picture, then sort them using what you picked and wrote above. It's not perfect with crumpled or blurry receipts, so you'll check everything before it's saved.</p>`:R.img?`<p class="note">Automatic receipt reading isn't available here, so you'll type the items on the next screen.</p>`:""}</div>
+ <div class="acts"><button class="btn ghost" id="bk">Back</button><span class="sp"></span><button class="btn red" id="go">${R.img&&sample?"Read receipt":"Next"}</button></div>`,()=>{
+ const dflt=()=>{$("#dflt").innerHTML=(R.mode!=="other"?`<label>${R.mode==="mixed"?"Main recipient (optional)":"Who is it for?"}<select id="pid">${pOpts(R.pid)}</select></label><label>Gift status<select id="st">${opts(STAT,R.status)}</select></label>`:"")+(R.mode!=="gift"?`<label>${R.mode==="mixed"?"Category for non-gift items":"Category"}<select id="cat">${opts(CATS,R.cat)}</select></label>`:"");
+  $("#pid")&&($("#pid").onchange=e=>R.pid=e.target.value);$("#st")&&($("#st").onchange=e=>R.status=e.target.value);$("#cat")&&($("#cat").onchange=e=>R.cat=e.target.value)};dflt();
+ $("#seg").onclick=e=>{const m=e.target.dataset.m;if(!m)return;R.mode=m;document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m));dflt()};
+ $("#bk").onclick=stepPick;
+ $("#go").onclick=async()=>{R.note=val("note");if(R.mode==="gift"&&!R.pid&&!R.note){toast("Pick who it's for, or describe it in Details");return}
+  if(R.img&&sample){const b=$("#go");b.disabled=true;b.innerHTML=`<span class="spin"></span> Reading…`;try{await readReceipt()}catch(e){toast("Couldn't read it – enter the items below");if(!R.items.length)R.items=[blankItem()]}}
+  else if(!R.items.length)R.items=[blankItem()];
+  R.items.forEach(i=>{if(!i.to)i.to=R.mode==="other"?"c:"+R.cat:R.pid?"p:"+R.pid:""});stepReview()}})}
+let tess=null;
+function loadTess(){return tess||(tess=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";sc.onload=()=>res(window.Tesseract);sc.onerror=()=>{tess=null;rej()};document.head.appendChild(sc)}))}
+const KW=[["Wrapping & Cards",/wrap|paper|tape|bow|ribbon|card|tag|tissue|gift ?bag/i],["Shipping & Postage",/ship|postage|stamp|usps|ups|fedex|mail/i],["Decorations",/decor|ornament|light|wreath|garland|stocking/i],["Tree",/tree/i],["Food & Entertaining",/food|party|cookie|candy|drink|wine|snack|groc/i],["Travel",/travel|gas|fuel|flight|hotel/i]];
+const STOP=new Set("the a an and is are for to of my her his it its this that these those was were be gift gifts".split(" "));
+function parseReceipt(text){const lines=text.split(/\n/).map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+ const price=/(-?\$?\s?\d{1,4}[.,]\d{2})\s*-?\s*[A-Z]{0,2}\s*$/;const out={store:"",date:"",tax:0,total:0,items:[]};
+ out.store=(lines.find(l=>/[a-z]{3}/i.test(l)&&!price.test(l))||"").slice(0,40);
+ const dm=text.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(dm){let y=+dm[3];if(y<100)y+=2000;const m=+dm[1],d=+dm[2];if(m<=12&&d<=31)out.date=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`}
+ for(const l of lines){const m=l.match(price);if(!m)continue;const amt=num(m[1].replace(",","."));const desc=l.slice(0,m.index).replace(/^[\d\s#]{4,}/,"").replace(/[^\w &'\-\/]/g," ").replace(/\s+/g," ").trim();
+  if(/sub ?total/i.test(l))continue;
+  if(/\btax\b/i.test(l)){out.tax+=amt;continue}
+  if(/\btotal\b|amount due|balance/i.test(l)){out.total=Math.max(out.total,amt);continue}
+  if(/change|cash|visa|master|amex|debit|credit|tend|paid|saving|you saved|points|reward|card #|auth/i.test(l))continue;
+  if(!desc||amt===0)continue;out.items.push({desc,amount:amt})}
+ return out}
+function sortItem(desc){const P=people();const note=R.note||"";
+ for(const cl of note.split(/[,;.\n]|\bthen\b/i)){const words=cl.toLowerCase().match(/[a-z]{3,}/g)||[];
+  const hit=words.filter(w=>!STOP.has(w)).some(w=>desc.toLowerCase().includes(w.replace(/s$/,"")));if(!hit)continue;
+  const p=P.find(p=>new RegExp("\\b"+p.name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i").test(cl));if(p)return "p:"+p.id;
+  const c=KW.find(([,re])=>re.test(cl));if(c)return "c:"+c[0]}
+ if(R.mode!=="other"){const c=KW.find(([,re])=>re.test(desc));if(R.mode==="mixed"&&c)return "c:"+c[0]}
+ return R.mode==="other"?"c:"+R.cat:R.pid?"p:"+R.pid:""}
+async function readReceipt(){const T=await loadTess();const b=$("#go");
+ const res=await T.recognize(R.blob,"eng",{logger:m=>{if(m.status==="recognizing text"&&b)b.innerHTML=`<span class="spin"></span> Reading… ${Math.round(m.progress*100)}%`}});
+ const out=parseReceipt(res.data.text||"");
+ R.store=out.store;R.date=out.date||today();R.total=out.total||"";R.tax=out.tax?Math.round(out.tax*100)/100:"";
+ R.items=out.items.map(i=>({desc:i.desc,amount:i.amount,to:sortItem(i.desc)}));if(!R.items.length){R.items=[blankItem()];toast("Couldn't find items – type them in")}}
+function toOpts(sel){return `<option value="">Choose…</option><optgroup label="Gift for">${people().map(p=>`<option value="p:${p.id}" ${sel==="p:"+p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</optgroup><optgroup label="Other expense">${CATS.map(c=>`<option value="c:${esc(c)}" ${sel==="c:"+c?"selected":""}>${esc(c)}</option>`).join("")}</optgroup><option value="skip" ${sel==="skip"?"selected":""}>Don't record</option>`}
+function itemsSum(){return R.items.filter(i=>i.to!=="skip").reduce((a,i)=>a+num(i.amount),0)}
+function stepReview(){
+ open(`<h2>Check &amp; save</h2>${R.img?`<img class="thumb" src="${R.img}" alt="Receipt preview" style="max-height:140px">`:""}
+ <div class="f"><label>Store<input id="store" value="${esc(R.store)}"></label>
+ <div class="two"><label>Date<input id="date" type="date" value="${esc(R.date)}"></label><label>Receipt total<input id="total" type="number" inputmode="decimal" step="0.01" value="${R.total}"></label></div>
+ <div class="two"><label>Tax<input id="tax" type="number" inputmode="decimal" step="0.01" value="${R.tax}"></label><label>Spread tax over items?<select id="spread">${opts([["1","Yes"],["0","No"]],R.spread?"1":"0")}</select></label></div>
+ <h3 style="font-size:19px;margin-top:6px">Items</h3><div id="items" class="f"></div>
+ <button class="btn ghost sm" id="addi" style="justify-self:start">+ Add item</button>
+ <p class="note" id="chk"></p></div>
+ <div class="acts"><button class="btn ghost" id="bk">Back</button><span class="sp"></span><button class="btn red" id="save">Save receipt</button></div>`,()=>{
+ const draw=()=>{$("#items").innerHTML=R.items.map((it,n)=>`<div class="li" data-n="${n}"><div class="two"><input data-k="desc" placeholder="Item" value="${esc(it.desc)}"><input data-k="amount" type="number" inputmode="decimal" step="0.01" placeholder="$" value="${it.amount}"></div>
+  <div class="row" style="gap:8px"><select data-k="to">${toOpts(it.to)}</select><button class="btn ghost sm" data-rm="${n}" aria-label="Remove item">✕</button></div></div>`).join("");chk()};
+ const chk=()=>{const s=itemsSum(),t=num($("#total").value),tx=num($("#tax").value),sp=$("#spread").value==="1";const rec=s+(sp?tx:0);
+  $("#chk").innerHTML=`Items ${money(s)}${tx?` + tax ${money(tx)}`:""}${t?` · receipt total ${money(t)}`:""}${t&&Math.abs((s+tx)-t)>0.02?` <b style="color:var(--red)">· doesn't add up – check the items</b>`:""}<br>Will record ${money(rec)}.`};
+ draw();
+ $("#items").oninput=e=>{const n=e.target.closest(".li").dataset.n,k=e.target.dataset.k;if(!k)return;R.items[n][k]=k==="amount"?e.target.value:e.target.value;if(k==="to")return;chk()};
+ $("#items").onchange=e=>{const n=e.target.closest(".li")?.dataset.n,k=e.target.dataset.k;if(k==="to"){R.items[n].to=e.target.value;chk()}};
+ $("#items").onclick=e=>{const r=e.target.dataset.rm;if(r!=null){R.items.splice(+r,1);draw()}};
+ ["total","tax","spread"].forEach(i=>$("#"+i).oninput=$("#"+i).onchange=chk);
+ $("#addi").onclick=()=>{R.items.push(blankItem());draw()};
+ $("#bk").onclick=()=>{R.store=val("store");R.date=val("date");R.total=val("total");R.tax=val("tax");stepDetails()};
+ $("#save").onclick=()=>saveReceipt()})}
+async function saveReceipt(){R.store=val("store");R.date=val("date");R.total=num(val("total"));R.tax=num(val("tax"));R.spread=val("spread")==="1";
+ const keep=R.items.filter(i=>i.to!=="skip"&&(i.desc||num(i.amount)));
+ if(keep.some(i=>!i.to)){toast("Every item needs a person or a category");return}
+ const btn=$("#save");btn.disabled=true;btn.innerHTML=`<span class="spin"></span> Saving…`;
+ const rid=uid("r_");let assetId="";
+ if(R.blob){try{const sm=await shrink(R.blob,1000);assetId=uid("img_");await imgPut(assetId,sm)}catch(e){assetId="";toast("Picture not saved, but the items will be")}}
+ const sub=keep.reduce((a,i)=>a+num(i.amount),0);const f=R.spread&&sub&&R.tax?(sub+R.tax)/sub:1;
+ put(rid,{kind:"receipt",store:R.store,date:R.date,total:R.total,tax:R.tax,note:R.note,assetId,created:new Date().toISOString()});
+ keep.forEach(i=>{const amt=Math.round(num(i.amount)*f*100)/100;
+  if(i.to.startsWith("p:"))put(uid("g_"),{kind:"gift",pid:i.to.slice(2),gift:i.desc,store:R.store,est:amt,actual:amt,status:R.status||"Purchased",wrapped:"No",orderDate:R.date,arrival:"",tracking:"",notes:R.note?"From receipt":"",receiptId:rid});
+  else put(uid("x_"),{kind:"expense",cat:i.to.slice(2),item:i.desc,date:R.date,amount:amt,notes:R.store,receiptId:rid})});
+ close();toast(`Saved ${keep.length} item${keep.length===1?"":"s"} from ${R.store||"receipt"}`)}
+
+function copyCsv(){const pn=Object.fromEntries(people().map(p=>[p.id,p.name]));const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+ const rows=[["Recipient","Gift","Store / Link","Est. Cost","Actual Cost","Status","Order Date","Expected Arrival","Tracking #","Wrapped?","Notes"],...all("gift").map(g=>[pn[g.pid]||"",g.gift,g.store,g.est,g.actual,g.status,g.orderDate,g.arrival,g.tracking,g.wrapped,g.notes])];
+ navigator.clipboard.writeText(rows.map(r=>r.map(q).join(",")).join("\n")).then(()=>toast("Copied – paste into Excel"),()=>toast("Copy was blocked"))}
+
+/* ---------- wiring ---------- */
+$("#tabs").onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;render()}};
+$("#addBtn").onclick=()=>({people:()=>editPerson(),gifts:()=>editGift(),other:()=>editExpense(),receipts:()=>editGift()})[tab]();
+$("#rcptBtn").onclick=startReceipt;
+{const d=lsLoad();if(d)S.docs=d}
+$("#snow").innerHTML=Array.from({length:22},(_,i)=>`<i style="left:${(i*4.6+Math.random()*4)%100}%;font-size:${8+Math.random()*10}px;animation-duration:${7+Math.random()*9}s;animation-delay:-${Math.random()*14}s">❄</i>`).join("");
+$("#sync").textContent="Saved on this phone";
+render();
+}
+</script>
+</body>
+</html>
